@@ -41,7 +41,7 @@ contract NFT is ERC721Enumerable, Ownable {
         require(supply + _mintAmount <= maxSupply);
 
         for (uint256 i = 1; i <= _mintAmount; i++) {
-            _safeMint(msg.sender, supply + 1);
+            _safeMint(msg.sender, supply + i);
         }
 
         emit Mint(_mintAmount, msg.sender);
@@ -57,5 +57,16 @@ contract NFT is ERC721Enumerable, Ownable {
                 abi.encodePacked(baseURI, _tokenId.toString(), baseExtension)
             )
         );
+    }
+
+    function walletOfOwner(
+        address _owner
+    ) public view returns (uint256[] memory) {
+        uint256 ownerTokenCount = balanceOf(_owner);
+        uint256[] memory tokenIds = new uint256[](ownerTokenCount);
+        for (uint256 i; i < ownerTokenCount; i++) {
+            tokenIds[i] = tokenOfOwnerByIndex(_owner, i);
+        }
+        return tokenIds;
     }
 }
