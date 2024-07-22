@@ -9,6 +9,7 @@ import preview from '../preview.png';
 // Components
 import Navigation from './Navigation';
 import Data from './Data';
+import Mint from './Mint';
 import Loading from './Loading';
 
 // ABIs: Import your contract ABIs here
@@ -71,7 +72,7 @@ function App() {
   }, [isLoading]);
 
 
-  return(
+  return (
     <Container>
       <Navigation account={account} />
 
@@ -107,6 +108,13 @@ function App() {
                 totalSupply={totalSupply}
                 cost={cost}
                 balance={balance}
+              />
+
+              <Mint
+                provider={provider}
+                nft={nft}
+                cost={cost}
+                setIsLoading={setIsLoading}
               />
             </Col>
 
