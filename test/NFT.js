@@ -10,7 +10,7 @@ const ether = tokens
 describe('NFT', () => {
   const NAME = 'Dapp Punks'
   const SYMBOL = 'DP'
-  const COST = ether(10)
+  const COST = ether(0.0001)
   const MAX_SUPPLY = 25
   const BASE_URI = 'ipfs://QmQ2jnDYecFhrf3asEWjyjZRX1pZSsNWG3qHzmNDvXa9qg/'
 
@@ -25,7 +25,8 @@ describe('NFT', () => {
   })
 
   describe('Deployment', () => {
-    const ALLOW_MINTING_ON = (Date.now() + 120000).toString().slice(0, 10) // 2 minutes from now
+    // const ALLOW_MINTING_ON = (Date.now() + 120000).toString().slice(0, 10) // 2 minutes from now
+    const ALLOW_MINTING_ON = (Date.now()).toString().slice(0, 10)
 
     beforeEach(async () => {
       const NFT = await ethers.getContractFactory('NFT')
@@ -86,9 +87,6 @@ describe('NFT', () => {
       })
 
       it('returns IPFS URI', async () => {
-        // EG: 'ipfs://QmQ2jnDYecFhrf3asEWjyjZRX1pZSsNWG3qHzmNDvXa9qg/1.json'
-        // Uncomment this line to see example
-        // console.log(await nft.tokenURI(1))
         expect(await nft.tokenURI(1)).to.equal(`${BASE_URI}1.json`)
       })
 
@@ -109,19 +107,17 @@ describe('NFT', () => {
 
     describe('Failure', async () => {
 
-      it('rejects insufficient payment', async () => {
+      beforeEach(async () => {
         const ALLOW_MINTING_ON = Date.now().toString().slice(0, 10) // Now
         const NFT = await ethers.getContractFactory('NFT')
         nft = await NFT.deploy(NAME, SYMBOL, COST, MAX_SUPPLY, ALLOW_MINTING_ON, BASE_URI)
+      })
 
-        await expect(nft.connect(minter).mint(1, { value: ether(1) })).to.be.reverted
+      it('rejects insufficient payment', async () => {
+        await expect(nft.connect(minter).mint(1, { value: COST / 10 })).to.be.reverted
       })
 
       it('requires at least 1 NFT to be minted', async () => {
-        const ALLOW_MINTING_ON = Date.now().toString().slice(0, 10) // Now
-        const NFT = await ethers.getContractFactory('NFT')
-        nft = await NFT.deploy(NAME, SYMBOL, COST, MAX_SUPPLY, ALLOW_MINTING_ON, BASE_URI)
-
         await expect(nft.connect(minter).mint(0, { value: COST })).to.be.reverted
       })
 
@@ -134,22 +130,28 @@ describe('NFT', () => {
       })
 
       it('does not allow more NFTs to be minted than max amount', async () => {
-        const ALLOW_MINTING_ON = Date.now().toString().slice(0, 10) // Now
-        const NFT = await ethers.getContractFactory('NFT')
-        nft = await NFT.deploy(NAME, SYMBOL, COST, MAX_SUPPLY, ALLOW_MINTING_ON, BASE_URI)
-
         await expect(nft.connect(minter).mint(100, { value: COST })).to.be.reverted
       })
 
       it('does not return URIs for invalid tokens', async () => {
-        const ALLOW_MINTING_ON = Date.now().toString().slice(0, 10) // Now
-        const NFT = await ethers.getContractFactory('NFT')
-        nft = await NFT.deploy(NAME, SYMBOL, COST, MAX_SUPPLY, ALLOW_MINTING_ON, BASE_URI)
         nft.connect(minter).mint(1, { value: COST })
-
         await expect(nft.tokenURI('99')).to.be.reverted
       })
 
+      it('owner can pause minting', async () => {
+        await nft.pauseMinting()
+        await expect(nft.connect(minter).mint(1, { value: COST })).to.be.revertedWith('Minting is paused')
+      })
+
+      it('restricts minting while paused', async () => {
+        await nft.pauseMinting()
+        await expect(nft.connect(minter).mint(1, { value: COST })).to.be.revertedWith('Minting is paused')
+      })
+
+      it('rejects minting more than max supply', async () => {
+        const overMaxSupply = MAX_SUPPLY + 1
+        await expect(nft.connect(minter).mint(overMaxSupply, { value: overMaxSupply * COST })).to.be.revertedWith('Cannot mint more than the max supply')
+      })
 
     })
 
