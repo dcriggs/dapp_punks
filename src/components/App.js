@@ -34,6 +34,9 @@ function App() {
 
   const [isLoading, setIsLoading] = useState(true)
 
+  const [lastMintedTokenId, setLastMintedTokenId] = useState('');
+  const [userMintedTokens, setUserMintedTokens] = useState([]);
+
   const loadBlockchainData = async () => {
     // Initiate provider
     const provider = new ethers.providers.Web3Provider(window.ethereum)
@@ -76,6 +79,42 @@ function App() {
     }
   }, [isLoading]);
 
+  useEffect(() => {
+    async function getLastMintedTokenId() {
+      if (nft && account) {
+        // Get the total number of tokens minted by the user
+        const tokenCount = await nft.balanceOf(account);
+
+        // Iterate to find the last minted token ID
+        let lastTokenId = ethers.constants.Zero;
+        for (let i = tokenCount - 1; i >= 0; i--) {
+          const tokenId = await nft.tokenOfOwnerByIndex(account, i);
+          lastTokenId = tokenId;
+          // Assuming you want to find the very last minted token ID
+          break;
+        }
+
+        setLastMintedTokenId(lastTokenId.toString());
+      }
+    }
+
+    async function getUserMintedTokens() {
+      if (nft && account) {
+        const tokenCount = await nft.balanceOf(account);
+        const tokens = [];
+
+        for (let i = 0; i < tokenCount; i++) {
+          const tokenId = await nft.tokenOfOwnerByIndex(account, i);
+          tokens.push(tokenId.toString());
+        }
+
+        setUserMintedTokens(tokens);
+      }
+    }
+
+    getLastMintedTokenId();
+    getUserMintedTokens();
+  }, [nft, account]);
 
   return (
     <Container>
@@ -92,7 +131,7 @@ function App() {
               {balance > 0 ? (
                 <div className='text-center'>
                   <img
-                    src={`https://gateway.pinata.cloud/ipfs/QmQPEMsfd1tJnqYPbnTQCjoa8vczfsV1FmqZWgRdNQ7z3g/${balance.toString()}.png`}
+                    src={`https://gateway.pinata.cloud/ipfs/QmQPEMsfd1tJnqYPbnTQCjoa8vczfsV1FmqZWgRdNQ7z3g/${lastMintedTokenId.toString()}.png`}
                     alt="Open Punk"
                     width="400px"
                     height="400px"
@@ -122,6 +161,23 @@ function App() {
                 setIsLoading={setIsLoading}
               />
             </Col>
+          </Row>
+          <Row>
+            {balance > 0 && (
+              <div>
+                <h3 className="text-center">User Minted Tokens:</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  {userMintedTokens.map((tokenId, index) => (
+                    <img
+                      key={index}
+                      src={`https://gateway.pinata.cloud/ipfs/QmQPEMsfd1tJnqYPbnTQCjoa8vczfsV1FmqZWgRdNQ7z3g/${tokenId}.png`}
+                      alt={`Token ID ${tokenId}`}
+                      style={{ width: '200px', height: '200px', objectFit: 'cover' }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </Row>
           <Row>
             {owner === account && (
