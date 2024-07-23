@@ -13,6 +13,8 @@ import config from '../config.json';
 const Mint = ({ provider, nft, cost, setIsLoading }) => {
   const [isWaiting, setIsWaiting] = useState(false);
   const [isWhitelisted, setIsWhitelisted] = useState(false);
+  const [mintAmount, setMintAmount] = useState(0);
+  // _mintAmount > 0 && _mintAmount <= 5
 
   useEffect(() => {
     const checkWhitelist = async () => {
@@ -35,14 +37,21 @@ const Mint = ({ provider, nft, cost, setIsLoading }) => {
     setIsWaiting(true);
 
     try {
-      const signer = await provider.getSigner();
-      const transaction = await nft.connect(signer).mint(1, { value: cost });
-      await transaction.wait();
-    } catch {
-      window.alert('User rejected or transaction reverted');
+      // Validate mint amount
+      if (mintAmount > 0 && mintAmount <= 5) {
+        const signer = await provider.getSigner();
+        const transaction = await nft.connect(signer).mint(mintAmount, { value: cost * mintAmount });
+        await transaction.wait();
+        window.alert('Tokens minted successfully!');
+      } else {
+        throw new Error('Mint amount must be greater than zero and less than or equal to five');
+      }
+    } catch (error) {
+      console.error('Error minting tokens:', error.message);
+      window.alert('Failed to mint tokens: ' + error.message);
     }
 
-    setIsLoading(true);
+    setIsWaiting(false);
   };
 
   return (
@@ -50,11 +59,22 @@ const Mint = ({ provider, nft, cost, setIsLoading }) => {
       {isWaiting ? (
         <Spinner animation="border" style={{ display: 'block', margin: '0 auto' }} />
       ) : isWhitelisted ? (
-        <Form.Group>
-          <Button variant="primary" type="submit" style={{ width: '100%' }}>
-            Mint
-          </Button>
-        </Form.Group>
+        <>
+          <Form.Group>
+            <Form.Control
+              type="number"
+              placeholder="Enter Token ID"
+              value={mintAmount}
+              onChange={(e) => setMintAmount(e.target.value)}
+              required
+            />
+          </Form.Group>
+          <Form.Group>
+            <Button variant="primary" type="submit" style={{ width: '100%' }}>
+              Mint
+            </Button>
+          </Form.Group>
+        </>
       ) : (
         <Form.Group>
           <Button variant="warning" disabled style={{ width: '100%' }}>

@@ -9,7 +9,7 @@ const hre = require("hardhat");
 async function main() {
   const NAME = 'Dapp Punks'
   const SYMBOL = 'DP'
-  const COST = ethers.utils.parseUnits('10', 'ether')
+  const COST = ethers.utils.parseUnits('0.0001', 'ether')
   const MAX_SUPPLY = 25
   const NFT_MINT_DATE = (Date.now() + 60000).toString().slice(0, 10)
   const IPFS_METADATA_URI = 'ipfs://QmQ2jnDYecFhrf3asEWjyjZRX1pZSsNWG3qHzmNDvXa9qg/'
