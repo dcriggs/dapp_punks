@@ -11,6 +11,7 @@ import Navigation from './Navigation';
 import Data from './Data';
 import Mint from './Mint';
 import Loading from './Loading';
+import Whitelist from './Whitelist';
 
 // ABIs: Import your contract ABIs here
 import NFT_ABI from '../abis/NFT.json'
@@ -23,6 +24,7 @@ function App() {
   const [nft, setNFT] = useState(null)
 
   const [account, setAccount] = useState(null)
+  const [owner, setOwner] = useState(null)
 
   const [revealTime, setRevealTime] = useState(0)
   const [maxSupply, setMaxSupply] = useState(0)
@@ -61,6 +63,9 @@ function App() {
 
     // Fetch account balance
     setBalance(await nft.balanceOf(account))
+
+    // Fetch contract owner
+    setOwner(await nft.owner())
 
     setIsLoading(false)
   }
@@ -117,7 +122,19 @@ function App() {
                 setIsLoading={setIsLoading}
               />
             </Col>
-
+          </Row>
+          <Row>
+            {owner === account && (
+              <Container>
+                <br />
+                <h3 className="text-center">Contract Admin Functions (Owner Only)</h3>
+                <Whitelist
+                  provider={provider}
+                  nft={nft}
+                  setIsLoading={setIsLoading}
+                />
+              </Container>
+            )}
           </Row>
         </>
       )}

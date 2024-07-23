@@ -13,9 +13,11 @@ contract NFT is ERC721Enumerable, Ownable {
     string public baseURI;
     string public baseExtension = ".json";
     bool public isPaused = false;
+    mapping(address => bool) public whitelist;
 
     event Mint(uint256 amount, address minter);
     event Withdraw(uint256 amount, address owner);
+    event WhitelistUpdated(address indexed account, bool isWhitelisted);
 
     constructor(
         string memory _name,
@@ -32,17 +34,28 @@ contract NFT is ERC721Enumerable, Ownable {
     }
 
     function mint(uint256 _mintAmount) public payable {
-        require(block.timestamp >= allowMintingOn, "Minting has not started yet");
+        require(
+            block.timestamp >= allowMintingOn,
+            "Minting has not started yet"
+        );
 
         require(!isPaused, "Minting is paused");
 
         uint256 supply = totalSupply();
 
-        require(supply + _mintAmount <= maxSupply, "Cannot mint more than the max supply");
+        require(
+            supply + _mintAmount <= maxSupply,
+            "Cannot mint more than the max supply"
+        );
 
-        require(_mintAmount > 0 && _mintAmount <= 5, "Mint amount must be greater than zero and less than or equal to five");
+        require(
+            _mintAmount > 0 && _mintAmount <= 5,
+            "Mint amount must be greater than zero and less than or equal to five"
+        );
 
         require(msg.value >= cost * _mintAmount, "Not enough to cover costs");
+
+        require(whitelist[msg.sender], "Address not whitelisted");
 
         for (uint256 i = 1; i <= _mintAmount; i++) {
             _safeMint(msg.sender, supply + i);
@@ -76,6 +89,10 @@ contract NFT is ERC721Enumerable, Ownable {
         return tokenIds;
     }
 
+    function isWhitelisted(address _address) public view returns (bool) {
+        return whitelist[_address];
+    }
+
     // Owner functions
 
     function withdraw() public onlyOwner {
@@ -97,5 +114,15 @@ contract NFT is ERC721Enumerable, Ownable {
 
     function unpauseMinting() public onlyOwner {
         isPaused = false;
+    }
+
+    function addToWhitelist(address _address) public onlyOwner {
+        whitelist[_address] = true;
+        emit WhitelistUpdated(_address, true);
+    }
+
+    function removeFromWhitelist(address _address) public onlyOwner {
+        whitelist[_address] = false;
+        emit WhitelistUpdated(_address, false);
     }
 }
