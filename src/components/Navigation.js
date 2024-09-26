@@ -8,11 +8,11 @@ const Navigation = ({ account }) => {
       <img
         alt="logo"
         src={logo}
-        width="40"
-        height="40"
+        width="120"
+        height="120"
         className="d-inline-block align-top mx-3"
       />
-      <Navbar.Brand href="#">Dapp Punks</Navbar.Brand>
+      <Navbar.Brand href="#">Dawson's Dapp Punks</Navbar.Brand>
       <Navbar.Collapse className="justify-content-end">
         <Navbar.Text>
           {account}
